@@ -1,0 +1,69 @@
+setns[newSimulator]
+$nscolor1Blue
+$nscolor2Red
+setnf[opennpd.namw]
+$ns namtrace-all $nf setnt[opennpd.trw]
+$nstrace-all$nt
+
+
+proc finish {} { globalnsnfnt
+$nsflush-trace close $nfclose $nt
+execnamsecond.nam&
+execawk-fpacketdeliveryratio.awknpd.tr& exit 0
+}
+
+
+setn0[$nsnode] setn1[$nsnode] setn2[$nsnode] setn3[$nsnode] setn4[$nsnode] setn5[$nsnode]
+
+$nsduplex-link$n0$n210Mbps10msDropTail
+$nsduplex-link$n1$n210Mbps10msDropTail
+
+$nsduplex-link$n2$n31Mbps5msDropTail
+$nsduplex-link$n3$n410Mbps10msDropTail
+$nsduplex-link$n3$n510Mbps10msDropTail
+
+
+$nsqueue-limit$n2$n35
+
+
+$nsduplex-link-op$n0$n2orientdown-right
+$nsduplex-link-op$n1$n2orientup-right
+$nsduplex-link-op$n2$n3orientright
+$nsduplex-link-op$n3$n4orientright-up
+$nsduplex-link-op$n3$n5orientright-down
+
+
+settcp[newAgent/TCP]
+$tcpsetclass_2
+$ns attach-agent $n0 $tcpsetsink[newAgent/TCPSink]
+$nsattach-agent$n4$sink
+$nsconnect$tcp$sink
+$tcpsetfid_1
+
+
+setftp[new Application/FTP]
+$ftpattach-agent$tcp
+$ftpsettype_FTP
+$ftpsetpacket_size_1000
+$ftpsetrate_1mb
+
+
+setudp[newAgent/UDP]
+$nsattach-agent$n1$udp set null [new Agent/Null]
+$nsattach-agent$n5$null
+
+$nsconnect$udp$null
+$udpsetfid_2
+
+
+setcbr[newApplication/Traffic/CBR]
+$cbrattach-agent$udp
+$cbrsettype_ CBR
+$cbrsetpacket_size_1000
+$cbrsetrate_1mb
+$nsat1.0"$ftpstart"
+$nsat3.0"$ftpstop"
+$nsat1.5"$cbrstart"
+$nsat3.5"$cbrstop"
+$nsat5.0"finish"
+$nsrun

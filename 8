@@ -1,0 +1,62 @@
+# Define a function to calculate CRC-32 checksum
+proc crc32 {data} {
+    set crc 0xffffffff
+    set poly 0xedb88320
+    set table [init_crc32_table]
+
+    foreach byte [split $data ""] {
+        set index [expr {($crc ^ [scan $byte %c]) & 0xff}]
+        set crc [expr {($crc >> 8) ^ [lindex $table $index]}]
+    }
+
+    return [expr {$crc ^ 0xffffffff}]
+}
+
+# Initialize the CRC-32 table
+proc init_crc32_table {} {
+    set table {}
+
+    for {set i 0} {$i < 256} {incr i} {
+        set crc $i
+        for {set j 0} {$j < 8} {incr j} {
+            if {[expr {($crc & 1) != 0}]} {
+                set crc [expr {($crc >> 1) ^ 0xedb88320}]
+            } else {
+                set crc [expr {$crc >> 1}]
+            }
+        }
+        lappend table $crc
+    }
+
+    return $table
+}
+
+# Generate a packet with CRC checksum appended
+proc generate_packet {payload} {
+    global crc32
+
+    set crc [crc32 $payload]
+    append payload $crc
+    return $payload
+}
+
+# Receive and check CRC checksum of the packet
+proc receive_packet {packet} {
+    global crc32
+
+    set data [string range $packet 0 end-5]
+    set received_crc [string range $packet end-4 end-1]
+    set calculated_crc [crc32 $data]
+
+    if {$received_crc == $calculated_crc} {
+        puts "Packet received without errors"
+    } else {
+        puts "Packet contains errors"
+    }
+}
+
+# Example usage
+set payload "Hello, world!"
+set packet [generate_packet $payload]
+puts "Transmitting packet: $packet"
+receive_packet $packet

@@ -1,0 +1,127 @@
+set ns [new Simulator]
+
+set nf [open ls.nam w]
+
+$ns namtrace-all $nf
+
+proc finish {}  {
+
+global ns nf
+
+$ns flush-trace
+
+close $nf
+
+exec nam ls.nam &
+
+exit 0
+
+}
+
+set n0 [$ns node]
+
+set n1 [$ns node]
+
+set n2 [$ns node]
+
+set n3 [$ns node]
+
+set n4 [$ns node]
+
+
+
+$ns duplex-link $n0 $n1 10Mb 10ms DropTail
+
+$ns queue-limit $n0 $n1 10
+
+$ns duplex-link $n1 $n2 10Mb 10ms DropTail
+
+$ns queue-limit $n1 $n2 10
+
+$ns duplex-link $n2 $n3 10Mb 10ms DropTail
+
+$ns queue-limit $n2 $n3 10
+
+$ns duplex-link $n3 $n0 10Mb 10ms DropTail
+
+$ns queue-limit $n3 $n0 10
+
+$ns duplex-link $n1 $n3 10Mb 10ms DropTail
+
+$ns queue-limit $n1 $n3 10
+
+$ns duplex-link $n0 $n2 10Mb 10ms DropTail
+
+$ns queue-limit $n0 $n2 10
+
+$ns duplex-link $n2 $n4 10Mb 10ms DropTail
+
+$ns queue-limit $n2 $n4 10
+
+$ns duplex-link-op $n0 $n1 orient right
+
+$ns duplex-link-op $n1 $n2 orient down
+
+$ns duplex-link-op $n2 $n3 orient left
+
+$ns duplex-link-op $n3 $n0 orient up
+
+$ns duplex-link-op $n1 $n3 orient down
+
+$ns duplex-link-op $n0 $n2 orient right-down
+
+$ns duplex-link-op $n2 $n4 orient right
+
+
+
+set tcp [ new Agent/TCP]
+
+$tcp set class_ 2
+
+$ns attach-agent $n0 $tcp
+
+set sink [new Agent/TCPSink]
+
+$ns attach-agent $n4 $sink
+
+$ns connect $tcp $sink
+
+
+
+set ftp [new Application/FTP]
+
+$ftp attach-agent $tcp
+
+$ftp set type_ FTP
+
+$ftp set packet_size_ 1000
+
+$ftp set rate_ 1Mb
+
+
+
+$ns cost $n0 $n1 2
+
+$ns cost $n0 $n2 1
+
+$ns cost $n0 $n3 3
+
+$ns cost $n1 $n2 2
+
+$ns cost $n2 $n3 1
+
+$ns cost $n1 $n3 3
+
+$ns cost $n2 $n4 2
+
+
+
+$ns at 1.0 "$ftp start"
+
+$ns at 5.0 "$ftp stop"
+
+$ns rtproto LS
+
+$ns at 5.0 "finish"
+
+$ns run
